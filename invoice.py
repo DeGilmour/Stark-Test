@@ -7,9 +7,7 @@ import starkbank
 from cpf_generator import CPF
 from dotenv import load_dotenv
 import os
-import json
 import logging
-
 
 load_dotenv()
 
@@ -64,53 +62,44 @@ user = starkbank.Project(
 
 starkbank.user = user
 
-def create_invoices():
-	"""Creates invoices."""
-	try:
-		end_time = datetime.utcnow() + timedelta(hours=24)
-		while datetime.utcnow() < end_time:
-			for _ in range(r.randint(8, 13)):
-				amount = r.randint(10000, 50000)
-				due_date = datetime.utcnow() + timedelta(days=1)
-				expiration = 2592000
-				fine = 2.0
-				interest = 1.0
-				descriptions = [{"key": "Service", "value": "Random Service"}]
-				discounts = []
-				tags = ["Random Tag"]
-				rules = []
-				splits = []
-
-				invoice = starkbank.Invoice(
-					amount=amount,
-					due=due_date,
-					expiration=expiration,
-					fine=fine,
-					interest=interest,
-					descriptions=descriptions,
-					discounts=discounts,
-					tags=tags,
-					rules=rules,
-					splits=splits,
-					name=f"Random Person: {r.randint(1, 10000)}",
-					tax_id=CPF.generate()
-				)
-
-				created_invoice = starkbank.invoice.create([invoice])
-				logging.info(f'Created invoice: {created_invoice}')
-				
-			time.sleep(10800)  # 3 hours
-
-	except Exception as e:
-		logging.error(f'Error creating invoices: {e}')
-
-def start_invoice_creation_thread():
-	threading.Thread(target=create_invoices, daemon=True).start()
-
 @app.route('/start-invoices', methods=['POST'])
-def start_invoices():
-	start_invoice_creation_thread()
-	return jsonify({'status': 'success', 'message': 'Invoice creation started'}), 200
+def create_invoices():
+    """Creates a batch of invoices."""
+    try:
+        for _ in range(r.randint(8, 13)):
+            amount = r.randint(10000, 50000)
+            due_date = datetime.now() + timedelta(days=1)
+            expiration = 2592000
+            fine = 2.0
+            interest = 1.0
+            descriptions = [{"key": "Service", "value": "Random Service"}]
+            discounts = []
+            tags = ["Random Tag"]
+            rules = []
+            splits = []
+
+            invoice = starkbank.Invoice(
+                amount=amount,
+                due=due_date,
+                expiration=expiration,
+                fine=fine,
+                interest=interest,
+                descriptions=descriptions,
+                discounts=discounts,
+                tags=tags,
+                rules=rules,
+                splits=splits,
+                name=f"Random Person: {r.randint(1, 10000)}",
+                tax_id=CPF.generate()
+            )
+
+            created_invoice = starkbank.invoice.create([invoice])
+            logging.info(f'Created invoice: {created_invoice}')
+        return jsonify({'status': 'success', 'message': 'Invoice creation started'}), 200
+
+    except Exception as e:
+        logging.error(f'Error creating invoices: {e}')
+
 
 @app.route('/create-transfer', methods=['POST'])
 def create_transfers():
